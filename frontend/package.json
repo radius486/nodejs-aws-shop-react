@@ -12,10 +12,10 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint --ignore-path .gitignore --fix src",
     "prettier": "prettier src --write",
-    "cdk:list": "npm --prefix ./cdk_typescript run list",
-    "cdk:bootstrap": "npm --prefix ./cdk_typescript run bootstrap",
-    "cdk:deploy": "npm --prefix ./cdk_typescript run deploy",
-    "cdk:destroy": "npm --prefix ./cdk_typescript run destroy"
+    "cdk:list": "npm --prefix ../cdk_typescript run list",
+    "cdk:bootstrap": "npm --prefix ../cdk_typescript run bootstrap",
+    "cdk:deploy": "npm --prefix ../cdk_typescript run deploy",
+    "cdk:destroy": "npm --prefix ../cdk_typescript run destroy"
   },
   "dependencies": {
     "@emotion/react": "^11.9.3",
