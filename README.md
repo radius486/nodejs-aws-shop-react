@@ -36,3 +36,27 @@ Runs tests in console, in browser or with coverage.
 ### `lint`, `prettier`
 
 Runs linting and formatting for all files in `src` folder.
+
+### `cdk:list`
+
+Shows cdk list
+
+### `cdk:bootstrap`
+
+Runs 'cdk bootstrap' from the root directory
+
+### `cdk:deploy`
+
+Runs 'cdk deploy' from the root directory
+
+### `cdk:destroy`
+
+Runs 'cdk destroy' from the root directory
+
+### `build:deploy`
+
+Builds and automatically deploys from the root directory
+
+## Links
+S3-website:     http://react-shop-cloudfront-s3-bucket.s3-website-eu-west-1.amazonaws.com
+CloudFront URL: https://d3d1oqhbcx9a75.cloudfront.net
