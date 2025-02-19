@@ -50,7 +50,7 @@ export class CdkTypescriptStack extends cdk.Stack {
     });
 
     new s3deploy.BucketDeployment(this, 'ReactShopDeployment', {
-      sources: [s3deploy.Source.asset('../frontend/dist')],
+      sources: [s3deploy.Source.asset('../dist')],
       destinationBucket: bucket,
       distribution,
       distributionPaths: ['/*']
