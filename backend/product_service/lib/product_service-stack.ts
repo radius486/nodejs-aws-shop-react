@@ -9,13 +9,13 @@ export class ProductServiceStack extends cdk.Stack {
 
     const productListFunction = new lambda.Function(this, 'ProductListFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset('lambda'),
+      code: lambda.Code.fromAsset('dist/lambda'),
       handler: 'product_list.handler',
     });
 
     const productByIdFunction = new lambda.Function(this, 'ProductByIdFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset('lambda'),
+      code: lambda.Code.fromAsset('dist/lambda'),
       handler: 'product_by_id.handler',
     });
 
