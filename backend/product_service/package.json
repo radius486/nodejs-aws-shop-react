@@ -9,7 +9,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "create:tables": "node dist/scripts/create_tables"
+    "create:tables": "node dist/scripts/create_tables",
+    "seed": "node dist/scripts/seeds"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
