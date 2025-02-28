@@ -1,4 +1,4 @@
-import { products } from './mocks'
+import { getProductById } from "./dynamo_db";
 
 const headers = {
   'Content-Type': 'application/json',
@@ -16,7 +16,7 @@ export const handler = async (event: any): Promise<any> => {
       };
     }
 
-    const product = products.find(p => p.id === event.pathParameters.productId);
+    const product = await getProductById(event.pathParameters.productId)
 
     if (!product) {
       return {

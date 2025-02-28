@@ -1,4 +1,4 @@
-import { products } from './mocks'
+import { getAllProducts } from "./dynamo_db";
 
 const headers = {
   'Content-Type': 'application/json',
@@ -6,16 +6,18 @@ const headers = {
   'Access-Control-Allow-Credentials': true,
 }
 
-exports.handler = async (event: any) => {
-  return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(products),
-  };
-};
-
 export const handler = async (event: any): Promise<any> => {
   try {
+    const products = await getAllProducts()
+
+    if (!products) {
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({ message: 'Products not found' }),
+      };
+    }
+
     return {
       statusCode: 200,
       headers,
