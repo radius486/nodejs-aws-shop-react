@@ -8,6 +8,16 @@ export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const layer = new lambda.LayerVersion(
+      this,
+      "Layer",
+      {
+        code: lambda.Code.fromAsset( "lib/layers/"),
+        compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+        layerVersionName: "NodeJsLayer",
+      }
+    );
+
     const productsTable = dynamodb.Table.fromTableName(
       this,
       'ProductsTable',
@@ -24,20 +34,35 @@ export class ProductServiceStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset('dist/lambda'),
       handler: 'product_list.handler',
+      layers: [
+        layer,
+      ],
     });
 
     const productByIdFunction = new lambda.Function(this, 'ProductByIdFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset('dist/lambda'),
       handler: 'product_by_id.handler',
+      layers: [
+        layer,
+      ],
+    });
+
+    const productCreateFunction = new lambda.Function(this, 'ProductCreateFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset('dist/lambda'),
+      handler: 'product_create.handler',
+      layers: [
+        layer,
+      ],
     });
 
     productsTable.grantReadData(productListFunction);
     stocksTable.grantReadData(productListFunction);
     productsTable.grantReadData(productByIdFunction);
     stocksTable.grantReadData(productByIdFunction);
-    // productsTable.grantWriteData(productCreateFunction);
-    // stocksTable.grantWriteData(productCreateFunction);
+    productsTable.grantWriteData(productCreateFunction);
+    stocksTable.grantWriteData(productCreateFunction);
 
     const productApi = new apigateway.LambdaRestApi(this, 'ProductApi', {
       handler: productListFunction,
@@ -47,6 +72,7 @@ export class ProductServiceStack extends cdk.Stack {
     const productListResource = productApi.root.addResource('products');
     const productByIdResource = productListResource.addResource('{productId}');
     productListResource.addMethod('GET', new apigateway.LambdaIntegration(productListFunction));
+    productListResource.addMethod('POST', new apigateway.LambdaIntegration(productCreateFunction));
     productByIdResource.addMethod('GET', new apigateway.LambdaIntegration(productByIdFunction));
   }
 }
