@@ -1,4 +1,5 @@
 import { createProductWithStock } from "./dynamo_db";
+import { logger } from "./logger";
 
 const headers = {
   'Content-Type': 'application/json',
@@ -9,6 +10,8 @@ const headers = {
 export const handler = async (event: any): Promise<any> => {
   try {
     if (!event.body) {
+      logger.error('Product data is required');
+
       return {
         statusCode: 400,
         headers,
@@ -20,6 +23,8 @@ export const handler = async (event: any): Promise<any> => {
     const { title, description, price, count } = product;
 
     if (!title) {
+      logger.error('Title is required');
+
       return {
         statusCode: 400,
         headers,
@@ -28,6 +33,8 @@ export const handler = async (event: any): Promise<any> => {
     }
 
     if (!description) {
+      logger.error('Description is required');
+
       return {
         statusCode: 400,
         headers,
@@ -36,6 +43,8 @@ export const handler = async (event: any): Promise<any> => {
     }
 
     if (price < 0) {
+      logger.error('Price must be non-negative');
+
       return {
         statusCode: 400,
         headers,
@@ -44,6 +53,8 @@ export const handler = async (event: any): Promise<any> => {
     }
 
     if (count <= 0) {
+      logger.error('Count must be non-negative');
+
       return {
         statusCode: 400,
         headers,
@@ -53,6 +64,8 @@ export const handler = async (event: any): Promise<any> => {
 
     const productId = await createProductWithStock(product);
 
+    logger.info(`Product created: ${productId}`);
+
     return {
       statusCode: 200,
       headers,
@@ -61,7 +74,9 @@ export const handler = async (event: any): Promise<any> => {
         ...product,
       })
     };
-  } catch (error) {
+  } catch (error: any) {
+    logger.error(error);
+
     return {
       statusCode: 500,
       headers,

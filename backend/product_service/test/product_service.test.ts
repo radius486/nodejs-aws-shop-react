@@ -1,6 +1,6 @@
 import { handler as getProductById } from '../lambda/product_by_id';
 import { handler as getProductsList } from '../lambda/product_list';
-import { products } from '../lambda/mocks';
+import { products } from './mocks';
 
 describe('getProductById Lambda', () => {
   it('should return product when valid ID is provided', async () => {

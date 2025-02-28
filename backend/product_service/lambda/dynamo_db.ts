@@ -6,6 +6,8 @@ import {
   TransactWriteItemsCommandInput
 } from "@aws-sdk/client-dynamodb";
 
+import { logger } from './logger';
+
 import { v4 as uuidv4 } from 'uuid';
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 
@@ -55,7 +57,7 @@ export const getAllProducts = async () => {
 
     return products;
   } catch (error) {
-    console.error("Error fetching products:", error);
+    logger.error(`Error fetching products: ${error}`);
     throw error;
   }
 };
@@ -98,7 +100,7 @@ export const getProductById = async (productId: string) => {
       count: stock.count
     };
   } catch (error) {
-    console.error("Error fetching product:", error);
+    logger.error(`Error fetching products: ${error}`);
     throw error;
   }
 };
@@ -140,10 +142,10 @@ export const createProductWithStock = async (product: ProductInput) => {
   try {
     const command = new TransactWriteItemsCommand(params);
     await client.send(command);
-    console.log(`Product and stock created successfully with ID: ${productId}`);
+    logger.info(`Product and stock created successfully with ID: ${productId}`);
     return productId;
   } catch (error) {
-    console.error("Error in transaction:", error);
+    logger.error(`Error in transaction: ${error}`);
     throw error;
   }
 };
