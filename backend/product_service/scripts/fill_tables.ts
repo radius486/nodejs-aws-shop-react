@@ -1,9 +1,6 @@
 import {
   DynamoDBClient,
-  PutItemCommand,
-  TransactWriteItem,
   TransactWriteItemsCommand,
-  TransactWriteItemsCommandInput
 } from "@aws-sdk/client-dynamodb";
 
 import { v4 as uuidv4 } from 'uuid';

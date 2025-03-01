@@ -7,7 +7,6 @@ import {
 import { logger } from './logger';
 
 import { v4 as uuidv4 } from 'uuid';
-import { unmarshall } from "@aws-sdk/util-dynamodb";
 
 type ProductInput = {
   title: string;
@@ -45,7 +44,6 @@ export const createProductWithStock = async (product: ProductInput) => {
             product_id: { S: productId },
             count: { N: count.toString() }
           },
-          // Optional: Ensure the stock entry doesn't already exist
           ConditionExpression: "attribute_not_exists(product_id)"
         }
       }
