@@ -11,56 +11,70 @@ const headers = {
 
 export const handler = async (event: any): Promise<any> => {
   try {
+
     if (!event.body) {
-      logger.error('Product data is required');
+      const message = 'Product data is required';
+      logger.error(message);
 
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ message: 'Product data is required' }),
+        body: JSON.stringify({ message }),
       };
     }
 
+    const errors = [];
     const product = JSON.parse(event.body);
     const { title, description, price, count } = product;
 
     if (!title) {
-      logger.error('Title is required');
+      errors.push('Title is required');
+    }
 
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ message: 'Title is required' }),
-      };
+    if (typeof title !== 'string') {
+      errors.push('Title must be a string');
     }
 
     if (!description) {
-      logger.error('Description is required');
+      errors.push('Description is required');
+    }
 
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ message: 'Description is required' }),
-      };
+    if (typeof description !== 'string') {
+      errors.push('Description must be a string');
+    }
+
+    if (!price) {
+      errors.push('Price is required');
     }
 
     if (price < 0) {
-      logger.error('Price must be non-negative');
+      errors.push('Price must be non-negative');
+    }
 
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ message: 'Price must be non-negative' }),
-      };
+    if (typeof price !== 'number') {
+      errors.push('Price must be a number');
+    }
+
+    if (!count) {
+      errors.push('Count is required');
     }
 
     if (count <= 0) {
-      logger.error('Count must be non-negative');
+      errors.push('Count must be positive');
+    }
+
+    if (typeof count !== 'number') {
+      errors.push('Count must be a number');
+    }
+
+    if (errors.length) {
+      logger.error(`Product data is invalid: ${errors.join(', ')}`);
+      logger.error(`Product data: ${JSON.stringify(product)}`);
 
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ message: 'Count must be non-negative' }),
+        body: JSON.stringify({ message: errors }),
       };
     }
 
