@@ -1,5 +1,5 @@
-import { handler as getProductById } from '../lambda/product_by_id';
-import { handler as getProductsList } from '../lambda/product_list';
+import { handler as getProductById } from '../lambda/product_by_id/product_by_id';
+import { handler as getProductsList } from '../lambda/product_list/product_list';
 import { products } from './mocks';
 
 describe('getProductById Lambda', () => {

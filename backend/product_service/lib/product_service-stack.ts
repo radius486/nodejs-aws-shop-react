@@ -32,25 +32,19 @@ export class ProductServiceStack extends cdk.Stack {
 
     const productListFunction = new lambda.Function(this, 'ProductListFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset('dist/lambda'),
+      code: lambda.Code.fromAsset('dist/lambda/product_list'),
       handler: 'product_list.handler',
-      layers: [
-        layer,
-      ],
     });
 
     const productByIdFunction = new lambda.Function(this, 'ProductByIdFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset('dist/lambda'),
+      code: lambda.Code.fromAsset('dist/lambda/product_by_id'),
       handler: 'product_by_id.handler',
-      layers: [
-        layer,
-      ],
     });
 
     const productCreateFunction = new lambda.Function(this, 'ProductCreateFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset('dist/lambda'),
+      code: lambda.Code.fromAsset('dist/lambda/product_create'),
       handler: 'product_create.handler',
       layers: [
         layer,
