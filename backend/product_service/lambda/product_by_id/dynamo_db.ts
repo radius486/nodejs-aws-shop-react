@@ -11,7 +11,6 @@ const client = new DynamoDBClient({});
 // Get a single product by ID with its stock
 export const getProductById = async (productId: string) => {
   try {
-    // Get product
     const productParams = {
       TableName: "products",
       Key: {
@@ -23,10 +22,9 @@ export const getProductById = async (productId: string) => {
     const productResponse = await client.send(productCommand);
 
     if (!productResponse.Item) {
-      throw new Error("Product not found");
+      return false;
     }
 
-    // Get stock
     const stockParams = {
       TableName: "stocks",
       Key: {
