@@ -67,6 +67,12 @@ export class ProductServiceStack extends cdk.Stack {
     const productApi = new apigateway.LambdaRestApi(this, 'ProductApi', {
       handler: productListFunction,
       proxy: false,
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key'],
+        allowCredentials: true,
+      },
     });
 
     const productListResource = productApi.root.addResource('products');
