@@ -1,5 +1,5 @@
 import { getProductById } from "./dynamo_db";
-import { logger } from "./logger";
+import { logger } from '/opt/nodejs/logger';
 
 const headers = {
   'Content-Type': 'application/json',

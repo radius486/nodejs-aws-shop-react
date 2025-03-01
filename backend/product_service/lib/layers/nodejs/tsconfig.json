@@ -6,7 +6,6 @@
       "es2020",
       "dom"
     ],
-    "outDir": "./dist",
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
@@ -23,14 +22,9 @@
     "strictPropertyInitialization": false,
     "typeRoots": [
       "./node_modules/@types"
-    ],
-    "paths": {
-      "/opt/nodejs/logger": ["./lib/layers/nodejs/logger"]
-    }
+    ]
   },
   "exclude": [
     "node_modules",
-    "cdk.out",
-    "dist/**/*",
   ]
 }

@@ -4,7 +4,7 @@ import {
   TransactWriteItemsCommandInput
 } from "@aws-sdk/client-dynamodb";
 
-import { logger } from './logger';
+import { logger } from '/opt/nodejs/logger';
 
 import { v4 as uuidv4 } from 'uuid';
 

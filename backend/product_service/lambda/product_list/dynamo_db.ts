@@ -3,7 +3,7 @@ import {
   ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 
-import { logger } from './logger';
+import { logger } from '/opt/nodejs/logger';
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 
 const client = new DynamoDBClient({});
