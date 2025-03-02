@@ -22,6 +22,36 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Create new product",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Product object that needs to be created",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProductCreate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product created successfully",
+            "schema": {
+              "$ref": "#/definitions/Product"
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
       }
     },
     "/products/{productId}": {
@@ -69,6 +99,31 @@
         },
         "count": {
           "type": "integer"
+        }
+      }
+    },
+    "ProductCreate": {
+      "type": "object",
+      "required": ["title", "description", "price", "count"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "New Product"
+        },
+        "description": {
+          "type": "string",
+          "example": "Product description"
+        },
+        "price": {
+          "type": "number",
+          "format": "double",
+          "minimum": 0,
+          "example": 99.99
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "example": 10
         }
       }
     }
