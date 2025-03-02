@@ -83,7 +83,7 @@ export const handler = async (event: any): Promise<any> => {
     logger.info(`Product created: ${productId}`);
 
     return {
-      statusCode: 200,
+      statusCode: 201,
       headers,
       body: JSON.stringify({
         id: productId,
