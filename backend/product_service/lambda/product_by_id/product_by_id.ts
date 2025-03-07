@@ -1,9 +1,12 @@
-import { products } from './mocks'
+import { getProductById } from "./dynamo_db";
+import { logger } from '/opt/nodejs/logger';
 
 const headers = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Credentials': true,
+  'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+  'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
 }
 
 export const handler = async (event: any): Promise<any> => {
@@ -16,9 +19,11 @@ export const handler = async (event: any): Promise<any> => {
       };
     }
 
-    const product = products.find(p => p.id === event.pathParameters.productId);
+    const product = await getProductById(event.pathParameters.productId)
 
     if (!product) {
+      logger.info(`Product not found: ${event.pathParameters.productId}`);
+
       return {
         statusCode: 404,
         headers,
@@ -26,12 +31,16 @@ export const handler = async (event: any): Promise<any> => {
       };
     }
 
+    logger.info(`Get product: ${event.pathParameters.productId}`);
+
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify(product),
     };
-  } catch (error) {
+  } catch (error: any) {
+    logger.error(error);
+
     return {
       statusCode: 500,
       headers,
