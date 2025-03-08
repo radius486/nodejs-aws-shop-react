@@ -14,6 +14,16 @@ export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const layer = new lambda.LayerVersion(
+      this,
+      "Layer",
+      {
+        code: lambda.Code.fromAsset( "lib/layers/"),
+        compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+        layerVersionName: "NodeJsLayer",
+      }
+    );
+
     const bucket = new s3.Bucket(this, 'MyAwsImportServiceBucket', {
       bucketName: BUCKET_NAME,
       autoDeleteObjects: true,
@@ -49,10 +59,13 @@ export class ImportServiceStack extends cdk.Stack {
         UPLOAD_FOLDER: UPLOAD_FOLDER,
         PARSED_FOLDER: PARSED_FOLDER,
       },
+      layers: [
+        layer,
+      ],
     });
 
     bucket.grantReadWrite(importProductsFileFunction);
-    bucket.grantRead(importFileParserFunction);
+    bucket.grantReadWrite(importFileParserFunction);
 
     const importApi = new apigateway.LambdaRestApi(this, 'ImportApi', {
       handler: importProductsFileFunction,
