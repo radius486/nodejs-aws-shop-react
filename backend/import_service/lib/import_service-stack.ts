@@ -8,6 +8,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 const BUCKET_NAME = process.env.BUCKET_NAME || 'my-aws-import-service-bucket';
 const REGION = process.env.AWS_REGION || 'eu-west-1';
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || 'uploaded';
+const PARSED_FOLDER = process.env.PARSED_FOLDER || 'parsed';
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -42,6 +43,12 @@ export class ImportServiceStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset('dist/lambda/import_file_parser'),
       handler: 'import_file_parser.handler',
+      environment: {
+        BUCKET_NAME: BUCKET_NAME,
+        REGION: REGION,
+        UPLOAD_FOLDER: UPLOAD_FOLDER,
+        PARSED_FOLDER: PARSED_FOLDER,
+      },
     });
 
     bucket.grantReadWrite(importProductsFileFunction);
