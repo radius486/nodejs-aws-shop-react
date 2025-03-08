@@ -5,6 +5,10 @@ import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 
+const BUCKET_NAME = process.env.BUCKET_NAME || 'my-aws-import-service-bucket';
+const REGION = process.env.AWS_REGION || 'eu-west-1';
+const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || 'uploaded';
+
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -17,6 +21,11 @@ export class ImportServiceStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset('dist/lambda/import_products_file'),
       handler: 'import_products_file.handler',
+      environment: {
+        BUCKET_NAME: BUCKET_NAME,
+        REGION: REGION,
+        UPLOAD_FOLDER: UPLOAD_FOLDER,
+      },
     });
 
     const importFileParserFunction = new lambda.Function(this, 'ImportFileParserFunction', {
