@@ -14,7 +14,17 @@ export class ImportServiceStack extends cdk.Stack {
     super(scope, id, props);
 
     const bucket = new s3.Bucket(this, 'MyAwsImportServiceBucket', {
-      bucketName: 'my-aws-import-service-bucket',
+      bucketName: BUCKET_NAME,
+      autoDeleteObjects: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      cors: [
+        {
+          allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.PUT],
+          allowedOrigins: ["*"],
+          allowedHeaders: ["*"],
+        },
+      ],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     const importProductsFileFunction = new lambda.Function(this, 'ImportProductsFileFunction', {
@@ -42,9 +52,8 @@ export class ImportServiceStack extends cdk.Stack {
       proxy: false,
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key'],
-        allowCredentials: true,
+        allowMethods: ["OPTIONS", "GET", "PUT"],
+        allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
       },
     });
 
