@@ -14,7 +14,7 @@ const client = new S3Client({ region: REGION });
 
 export const handler = async (event: any): Promise<any> => {
   try {
-    const filename = event.queryStringParameters?.name;
+    const filename = event.queryStringParameters?.name || '';
 
     if (!filename) {
       console.error('Filename is required');
@@ -22,7 +22,7 @@ export const handler = async (event: any): Promise<any> => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ message: filename }),
+        body: JSON.stringify({ message: 'Filename is required' }),
       };
     }
 
