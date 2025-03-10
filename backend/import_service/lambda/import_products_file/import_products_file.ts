@@ -14,15 +14,26 @@ const client = new S3Client({ region: REGION });
 
 export const handler = async (event: any): Promise<any> => {
   try {
+    let fileError = '';
     const filename = event.queryStringParameters?.name || '';
 
+    const csvRegex = /^.+\.(csv)$/i;
+
     if (!filename) {
-      console.error('Filename is required');
+      fileError = 'File name is missing.';
+    }
+
+    if (!csvRegex.test(filename)) {
+      fileError = 'Invalid file type. Only CSV files are allowed.';
+    }
+
+    if (fileError) {
+      console.error(fileError);
 
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ message: 'Filename is required' }),
+        body: JSON.stringify({ message: fileError }),
       };
     }
 
