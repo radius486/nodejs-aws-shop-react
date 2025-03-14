@@ -87,6 +87,8 @@ export class ProductServiceStack extends cdk.Stack {
     stocksTable.grantReadData(productByIdFunction);
     productsTable.grantWriteData(productCreateFunction);
     stocksTable.grantWriteData(productCreateFunction);
+    productsTable.grantWriteData(catalogBatchProcessFunction);
+    stocksTable.grantWriteData(catalogBatchProcessFunction);
     catalogItemsQueue.grantConsumeMessages(catalogBatchProcessFunction);
 
     const productApi = new apigateway.LambdaRestApi(this, 'ProductApi', {
