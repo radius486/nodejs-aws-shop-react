@@ -6,6 +6,10 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Duration } from 'aws-cdk-lib';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as sns from 'aws-cdk-lib/aws-sns';
+
+const EMAIL = process.env.EMAIL || 'r.grishaev@softteco.com';
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -42,6 +46,14 @@ export class ProductServiceStack extends cdk.Stack {
       batchSize: 5,
       enabled: true,
     });
+
+    const createProductTopic = new sns.Topic(this, 'CreateProductTopic', {
+      topicName: 'createProductTopic'
+    });
+
+    createProductTopic.addSubscription(
+      new subscriptions.EmailSubscription(EMAIL)
+    );
 
     const productListFunction = new lambda.Function(this, 'ProductListFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -81,6 +93,11 @@ export class ProductServiceStack extends cdk.Stack {
 
     catalogBatchProcessFunction.addEventSource(eventSource);
 
+    catalogBatchProcessFunction.addEnvironment(
+      'SNS_TOPIC_ARN',
+      createProductTopic.topicArn
+    );
+
     productsTable.grantReadData(productListFunction);
     stocksTable.grantReadData(productListFunction);
     productsTable.grantReadData(productByIdFunction);
@@ -90,6 +107,7 @@ export class ProductServiceStack extends cdk.Stack {
     productsTable.grantWriteData(catalogBatchProcessFunction);
     stocksTable.grantWriteData(catalogBatchProcessFunction);
     catalogItemsQueue.grantConsumeMessages(catalogBatchProcessFunction);
+    createProductTopic.grantPublish(catalogBatchProcessFunction);
 
     const productApi = new apigateway.LambdaRestApi(this, 'ProductApi', {
       handler: productListFunction,

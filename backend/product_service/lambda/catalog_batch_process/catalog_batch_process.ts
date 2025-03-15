@@ -1,6 +1,11 @@
 import { logger } from '/opt/nodejs/logger';
 import { SQSHandler, SQSEvent } from 'aws-lambda';
 import { createProductWithStock } from "./dynamo_db";
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { ProductInput } from "./dynamo_db";
+
+const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
+const snsClient = new SNSClient({ region: process.env.AWS_REGION });
 
 export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
   try {
@@ -8,6 +13,8 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
       logger.error('No messages in the SQS event');
       return;
     }
+
+    const createdProducts: ProductInput[] = [];
 
     for (const record of event.Records) {
       const errors = [];
@@ -70,12 +77,35 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
         throw new Error(`${errors}`);
       }
 
-      const productId = await createProductWithStock(formattedProduct);
-
-      logger.info(`Product created: ${productId}`);
+      const createdProduct = await createProductWithStock(formattedProduct);
+      createdProducts.push(createdProduct);
     }
-  } catch (error) {
+
+    const message = {
+      productsCreated: createdProducts.length,
+      products: createdProducts,
+      timestamp: new Date().toISOString()
+    };
+
+    await snsClient.send(new PublishCommand({
+      TopicArn: SNS_TOPIC_ARN,
+      Subject: 'Products Created Successfully',
+      Message: JSON.stringify(message, null, 2),
+    }));
+
+    logger.info(`Products created: ${JSON.stringify(createdProducts)}`);
+  } catch (error: any) {
     logger.error(`Error processing SQS messages: ${error}`);
+
+    await snsClient.send(new PublishCommand({
+      TopicArn: SNS_TOPIC_ARN,
+      Subject: 'Error Creating Products',
+      Message: JSON.stringify({
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }, null, 2),
+    }));
+
     throw error;
   }
 };

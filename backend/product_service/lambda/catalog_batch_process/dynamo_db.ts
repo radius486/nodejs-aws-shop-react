@@ -8,7 +8,7 @@ import { logger } from '/opt/nodejs/logger';
 
 import { v4 as uuidv4 } from 'uuid';
 
-type ProductInput = {
+export type ProductInput = {
   title: string;
   description: string;
   price: number;
@@ -17,7 +17,7 @@ type ProductInput = {
 
 const client = new DynamoDBClient({});
 
-export const createProductWithStock = async (product: ProductInput) => {
+export const createProductWithStock = async (product: ProductInput): Promise<ProductInput> => {
   const { title, description, price, count } = product
 
   const productId = uuidv4();
@@ -54,7 +54,7 @@ export const createProductWithStock = async (product: ProductInput) => {
     const command = new TransactWriteItemsCommand(params);
     await client.send(command);
     logger.info(`Product and stock created successfully with ID: ${productId}`);
-    return productId;
+    return product;
   } catch (error) {
     logger.error(`Error in transaction: ${error}`);
     throw error;
