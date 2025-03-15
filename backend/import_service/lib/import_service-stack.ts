@@ -6,12 +6,14 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as dotenv from 'dotenv'
+dotenv.config()
 
-const BUCKET_NAME = process.env.BUCKET_NAME || 'my-aws-import-service-bucket';
+const BUCKET_NAME = process.env.BUCKET_NAME || '';
 const REGION = process.env.AWS_REGION || 'eu-west-1';
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || 'uploaded';
 const PARSED_FOLDER = process.env.PARSED_FOLDER || 'parsed';
-const QUEUE_URL = process.env.QUEUE_URL || 'https://sqs.eu-west-1.amazonaws.com/248189938737/catalogItemsQueue';
+const QUEUE_URL = process.env.QUEUE_URL || '';
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {

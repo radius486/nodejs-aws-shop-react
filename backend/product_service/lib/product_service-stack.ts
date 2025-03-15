@@ -8,9 +8,11 @@ import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Duration } from 'aws-cdk-lib';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import * as dotenv from 'dotenv'
+dotenv.config()
 
-const EMAIL_PRIMARY = process.env.EMAIL_PRIMARY || 'r.grishaev@softteco.com';
-const EMAIL_SECONDARY = process.env.EMAIL_SECONDARY || 'radion.grishaev@softteco.com';
+const EMAIL_PRIMARY = process.env.EMAIL_PRIMARY || '';
+const EMAIL_SECONDARY = process.env.EMAIL_SECONDARY || '';
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
