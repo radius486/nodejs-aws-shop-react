@@ -3,7 +3,6 @@ import {
   GetItemCommand,
 } from "@aws-sdk/client-dynamodb";
 
-import { logger } from '/opt/nodejs/logger';
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 
 const client = new DynamoDBClient({});
@@ -44,7 +43,7 @@ export const getProductById = async (productId: string) => {
       count: stock.count
     };
   } catch (error) {
-    logger.error(`Error fetching products: ${error}`);
+    console.error(`Error fetching products: ${error}`);
     throw error;
   }
 };

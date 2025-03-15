@@ -4,8 +4,6 @@ import {
   TransactWriteItemsCommandInput
 } from "@aws-sdk/client-dynamodb";
 
-import { logger } from '/opt/nodejs/logger';
-
 import { v4 as uuidv4 } from 'uuid';
 
 type ProductInput = {
@@ -53,10 +51,10 @@ export const createProductWithStock = async (product: ProductInput) => {
   try {
     const command = new TransactWriteItemsCommand(params);
     await client.send(command);
-    logger.info(`Product and stock created successfully with ID: ${productId}`);
+    console.log(`Product and stock created successfully with ID: ${productId}`);
     return productId;
   } catch (error) {
-    logger.error(`Error in transaction: ${error}`);
+    console.error(`Error in transaction: ${error}`);
     throw error;
   }
 };

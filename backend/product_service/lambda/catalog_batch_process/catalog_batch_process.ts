@@ -1,16 +1,13 @@
-import { logger } from '/opt/nodejs/logger';
-import { SQSHandler, SQSEvent } from 'aws-lambda';
 import { createProductWithStock } from "./dynamo_db";
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
-import { ProductInput } from "./dynamo_db";
 
 const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
 const snsClient = new SNSClient({ region: process.env.AWS_REGION });
 
-export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
+export const handler: any = async (event: any): Promise<void> => {
   try {
     if (!event.Records || event.Records.length === 0) {
-      logger.error('No messages in the SQS event');
+      console.error('No messages in the SQS event');
       return;
     }
 
@@ -26,7 +23,7 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
       }
 
       const { title, description, price, count } = formattedProduct;
-      logger.info( product);
+      console.log( product);
 
       if (!title) {
         errors.push('Title is required');
@@ -69,8 +66,8 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
       }
 
       if (errors.length) {
-        logger.error(`Product data is invalid: ${errors.join(', ')}`);
-        logger.error(`Product data: ${JSON.stringify(formattedProduct)}`);
+        console.error(`Product data is invalid: ${errors.join(', ')}`);
+        console.error(`Product data: ${JSON.stringify(formattedProduct)}`);
 
         throw new Error(`${errors}`);
       }
@@ -89,10 +86,10 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
         }
       }));
 
-      logger.info(`Product created: ${JSON.stringify(createdProduct)}`);
+      console.log(`Product created: ${JSON.stringify(createdProduct)}`);
     }
   } catch (error: any) {
-    logger.error(`Error processing SQS messages: ${error}`);
+    console.error(`Error processing SQS messages: ${error}`);
 
     await snsClient.send(new PublishCommand({
       TopicArn: SNS_TOPIC_ARN,

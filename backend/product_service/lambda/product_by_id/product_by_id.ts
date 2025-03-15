@@ -1,5 +1,4 @@
 import { getProductById } from "./dynamo_db";
-import { logger } from '/opt/nodejs/logger';
 
 const headers = {
   'Content-Type': 'application/json',
@@ -22,7 +21,7 @@ export const handler = async (event: any): Promise<any> => {
     const product = await getProductById(event.pathParameters.productId)
 
     if (!product) {
-      logger.info(`Product not found: ${event.pathParameters.productId}`);
+      console.log(`Product not found: ${event.pathParameters.productId}`);
 
       return {
         statusCode: 404,
@@ -31,7 +30,7 @@ export const handler = async (event: any): Promise<any> => {
       };
     }
 
-    logger.info(`Get product: ${event.pathParameters.productId}`);
+    console.log(`Get product: ${event.pathParameters.productId}`);
 
     return {
       statusCode: 200,
@@ -39,7 +38,7 @@ export const handler = async (event: any): Promise<any> => {
       body: JSON.stringify(product),
     };
   } catch (error: any) {
-    logger.error(error);
+    console.error(error);
 
     return {
       statusCode: 500,
