@@ -4,11 +4,14 @@ import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 const BUCKET_NAME = process.env.BUCKET_NAME || 'my-aws-import-service-bucket';
 const REGION = process.env.AWS_REGION || 'eu-west-1';
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || 'uploaded';
 const PARSED_FOLDER = process.env.PARSED_FOLDER || 'parsed';
+const QUEUE_URL = process.env.QUEUE_URL || 'https://sqs.eu-west-1.amazonaws.com/248189938737/catalogItemsQueue';
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -38,6 +41,12 @@ export class ImportServiceStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    const catalogItemsQueue = sqs.Queue.fromQueueArn(
+      this,
+      'CatalogItemsQueue',
+      `arn:aws:sqs:eu-west-1:248189938737:catalogItemsQueue`
+    );
+
     const importProductsFileFunction = new lambda.Function(this, 'ImportProductsFileFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset('dist/lambda/import_products_file'),
@@ -58,11 +67,17 @@ export class ImportServiceStack extends cdk.Stack {
         REGION: REGION,
         UPLOAD_FOLDER: UPLOAD_FOLDER,
         PARSED_FOLDER: PARSED_FOLDER,
+        QUEUE_URL: QUEUE_URL,
       },
       layers: [
         layer,
       ],
     });
+
+    importFileParserFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['sqs:SendMessage'],
+      resources: [catalogItemsQueue.queueArn]
+    }));
 
     bucket.grantReadWrite(importProductsFileFunction);
     bucket.grantReadWrite(importFileParserFunction);

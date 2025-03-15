@@ -1,19 +1,25 @@
 import { S3Event } from 'aws-lambda';
 import { S3Client, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { Readable } from 'stream';
 import csvParser = require('csv-parser');
 
 const REGION = process.env.AWS_REGION || 'eu-west-1';
 const PARSED_FOLDER = process.env.PARSED_FOLDER || 'parsed';
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || 'uploaded';
+const QUEUE_URL = process.env.QUEUE_URL;
 
 const s3Client = new S3Client({
   region: REGION
 });
 
+const sqsClient = new SQSClient({
+  region: REGION
+});
+
 export const handler = async (event: S3Event): Promise<any> => {
   try {
-    console.log('Parsing process:', { event });
+    console.log('Parsing process:', JSON.stringify(event));
 
     for (const record of event.Records) {
       const bucket = record.s3.bucket.name;
@@ -52,9 +58,20 @@ export const handler = async (event: S3Event): Promise<any> => {
           .on('end', async () => {
             console.log(`Parsed ${results.length} rows from ${key}`);
 
-            // Process each row
+            // Send each item to SQS
             for (const item of results) {
-              console.log('Processed item:', item);
+              try {
+                const command = new SendMessageCommand({
+                  QueueUrl: QUEUE_URL,
+                  MessageBody: JSON.stringify(item),
+                });
+
+                await sqsClient.send(command);
+                console.log('Successfully sent message to SQS:', item);
+              } catch (error) {
+                console.error('Error sending message to SQS:', error);
+                // Continue processing other items even if one fails
+              }
             }
 
             resolve(results);
