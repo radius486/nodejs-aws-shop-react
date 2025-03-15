@@ -9,7 +9,8 @@ import { Duration } from 'aws-cdk-lib';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as sns from 'aws-cdk-lib/aws-sns';
 
-const EMAIL = process.env.EMAIL || 'r.grishaev@softteco.com';
+const EMAIL_PRIMARY = process.env.EMAIL_PRIMARY || 'r.grishaev@softteco.com';
+const EMAIL_SECONDARY = process.env.EMAIL_SECONDARY || 'radion.grishaev@softteco.com';
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -52,7 +53,23 @@ export class ProductServiceStack extends cdk.Stack {
     });
 
     createProductTopic.addSubscription(
-      new subscriptions.EmailSubscription(EMAIL)
+      new subscriptions.EmailSubscription(EMAIL_PRIMARY, {
+        filterPolicy: {
+          price: sns.SubscriptionFilter.numericFilter({
+            lessThan: 100
+          })
+        }
+      })
+    );
+
+    createProductTopic.addSubscription(
+      new subscriptions.EmailSubscription(EMAIL_SECONDARY, {
+        filterPolicy: {
+          price: sns.SubscriptionFilter.numericFilter({
+            greaterThanOrEqualTo: 100
+          })
+        }
+      })
     );
 
     const productListFunction = new lambda.Function(this, 'ProductListFunction', {

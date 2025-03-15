@@ -14,8 +14,6 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
       return;
     }
 
-    const createdProducts: ProductInput[] = [];
-
     for (const record of event.Records) {
       const errors = [];
       const product = JSON.parse(record.body);
@@ -78,22 +76,21 @@ export const handler: SQSHandler = async (event: SQSEvent): Promise<void> => {
       }
 
       const createdProduct = await createProductWithStock(formattedProduct);
-      createdProducts.push(createdProduct);
+
+      await snsClient.send(new PublishCommand({
+        TopicArn: SNS_TOPIC_ARN,
+        Subject: 'New Product Created',
+        Message: JSON.stringify(createdProduct, null, 2),
+        MessageAttributes: {
+          price: {
+            DataType: 'Number',
+            StringValue: createdProduct.price.toString()
+          }
+        }
+      }));
+
+      logger.info(`Product created: ${JSON.stringify(createdProduct)}`);
     }
-
-    const message = {
-      productsCreated: createdProducts.length,
-      products: createdProducts,
-      timestamp: new Date().toISOString()
-    };
-
-    await snsClient.send(new PublishCommand({
-      TopicArn: SNS_TOPIC_ARN,
-      Subject: 'Products Created Successfully',
-      Message: JSON.stringify(message, null, 2),
-    }));
-
-    logger.info(`Products created: ${JSON.stringify(createdProducts)}`);
   } catch (error: any) {
     logger.error(`Error processing SQS messages: ${error}`);
 
