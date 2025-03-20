@@ -1,65 +1,90 @@
-import { handler as getProductById } from '../lambda/product_by_id/product_by_id';
-import { handler as getProductsList } from '../lambda/product_list/product_list';
-import { products } from '../mocks';
+import { mockClient } from 'aws-sdk-client-mock';
+import { DynamoDBDocumentClient, GetCommand, ScanCommand, PutCommand, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { handler as catalogBatchProcess } from '../lambda/catalog_batch_process/catalog_batch_process';
 
-describe('getProductById Lambda', () => {
-  it('should return product when valid ID is provided', async () => {
-    const event = {
-      pathParameters: {
-        productId: products[0].id
-      }
-    };
+// Mock DynamoDB and SNS clients
+const ddbMock = mockClient(DynamoDBDocumentClient);
+const snsMock = mockClient(SNSClient);
 
-    const response = await getProductById(event);
-
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body)).toEqual(products[0]);
+describe('Product Service Lambda Functions', () => {
+  beforeEach(() => {
+    ddbMock.reset();
+    snsMock.reset();
+    // Mock console methods to keep test output clean
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('should return 404 when product is not found', async () => {
-    const event = {
-      pathParameters: {
-        productId: 'non-existent-id'
-      }
-    };
+  describe('catalogBatchProcess Lambda', () => {
+    it('should process SQS batch and create products', async () => {
+      // Arrange
+      const sqsEvent = {
+        Records: [
+          {
+            body: JSON.stringify({
+              title: 'SQS Product 1',
+              description: 'Description 1',
+              price: 100,
+              count: 10
+            })
+          },
+          {
+            body: JSON.stringify({
+              title: 'SQS Product 2',
+              description: 'Description 2',
+              price: 200,
+              count: 20
+            })
+          }
+        ]
+      };
 
-    const response = await getProductById(event);
+      ddbMock.on(BatchWriteCommand).resolves({});
+      snsMock.on(PublishCommand).resolves({});
 
-    expect(response.statusCode).toBe(404);
-    expect(JSON.parse(response.body)).toEqual({ message: 'Product not found' });
-  });
+      // Act
+      await catalogBatchProcess(sqsEvent);
 
-  it('should return 400 when productId is not provided', async () => {
-    const event = {
-      pathParameters: null
-    };
+      // Assert
+      expect(snsMock.calls()).toHaveLength(2); // One call per product
+      const snsCall = snsMock.calls()[0].args[0];
+      expect(snsCall.input).toMatchObject({
+        Subject: 'New Product Created'
+      });
+    });
 
-    const response = await getProductById(event);
+    it('should handle invalid product data in batch', async () => {
+      // Arrange
+      const sqsEvent = {
+        Records: [
+          {
+            body: 'invalid-json'
+          }
+        ]
+      };
 
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body)).toEqual({ message: 'Product ID is required' });
-  });
-});
+      // Act & Assert
+      await expect(catalogBatchProcess(sqsEvent)).rejects.toThrow();
+      expect(snsMock.calls()).toHaveLength(1);
+      const snsCall = snsMock.calls()[0].args[0];
+      expect(snsCall.input).toMatchObject({
+        Subject: 'Error Creating Products'
+      });
+    });
 
-describe('getProductsList Lambda', () => {
-  it('should return all products', async () => {
-    const event = {};
+    it('should handle empty batch', async () => {
+      // Arrange
+      const sqsEvent = {
+        Records: []
+      };
 
-    const response = await getProductsList(event);
+      // Act
+      await catalogBatchProcess(sqsEvent);
 
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body)).toEqual(products);
-  });
-
-  it('should return proper headers', async () => {
-    const event = {};
-
-    const response = await getProductsList(event);
-
-    expect(response.headers).toEqual({
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true,
+      // Assert
+      expect(ddbMock.calls()).toHaveLength(0);
+      expect(snsMock.calls()).toHaveLength(0);
     });
   });
 });

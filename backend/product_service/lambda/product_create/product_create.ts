@@ -1,5 +1,4 @@
 import { createProductWithStock } from "./dynamo_db";
-import { logger } from '/opt/nodejs/logger';
 
 const headers = {
   'Content-Type': 'application/json',
@@ -14,7 +13,7 @@ export const handler = async (event: any): Promise<any> => {
 
     if (!event.body) {
       const message = 'Product data is required';
-      logger.error(message);
+      console.error(message);
 
       return {
         statusCode: 400,
@@ -68,8 +67,8 @@ export const handler = async (event: any): Promise<any> => {
     }
 
     if (errors.length) {
-      logger.error(`Product data is invalid: ${errors.join(', ')}`);
-      logger.error(`Product data: ${JSON.stringify(product)}`);
+      console.error(`Product data is invalid: ${errors.join(', ')}`);
+      console.error(`Product data: ${JSON.stringify(product)}`);
 
       return {
         statusCode: 400,
@@ -80,7 +79,7 @@ export const handler = async (event: any): Promise<any> => {
 
     const productId = await createProductWithStock(product);
 
-    logger.info(`Product created: ${productId}`);
+    console.log(`Product created: ${productId}`);
 
     return {
       statusCode: 201,
@@ -91,7 +90,7 @@ export const handler = async (event: any): Promise<any> => {
       })
     };
   } catch (error: any) {
-    logger.error(error);
+    console.error(error);
 
     return {
       statusCode: 500,

@@ -1,5 +1,4 @@
 import { getAllProducts } from "./dynamo_db";
-import { logger } from '/opt/nodejs/logger';
 
 const headers = {
   'Content-Type': 'application/json',
@@ -14,7 +13,7 @@ export const handler = async (event: any): Promise<any> => {
     const products = await getAllProducts()
 
     if (!products) {
-      logger.info('Products not found');
+      console.log('Products not found');
 
       return {
         statusCode: 404,
@@ -23,7 +22,7 @@ export const handler = async (event: any): Promise<any> => {
       };
     }
 
-    logger.info('Get product list');
+    console.log('Get product list');
 
     return {
       statusCode: 200,
@@ -31,7 +30,7 @@ export const handler = async (event: any): Promise<any> => {
       body: JSON.stringify(products),
     };
   } catch (error: any) {
-    logger.error(error);
+    console.error(error);
 
     return {
       statusCode: 500,
