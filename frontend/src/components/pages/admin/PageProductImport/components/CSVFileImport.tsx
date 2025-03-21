@@ -11,6 +11,13 @@ type CSVFileImportProps = {
 export default function CSVFileImport({ url, title }: CSVFileImportProps) {
   const [file, setFile] = React.useState<File>();
 
+  const authToken = localStorage.getItem("authorization_token")
+  let headers: any = {}
+
+  if (authToken) {
+    headers.Authorization = `Basic ${localStorage.getItem("authorization_token")}`;
+  }
+
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -30,6 +37,7 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
     const response = await axios({
       method: "GET",
       url,
+      headers,
       params: {
         name: encodeURIComponent(file?.name || ''),
       },
