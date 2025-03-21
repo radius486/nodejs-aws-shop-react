@@ -15,6 +15,8 @@ const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || 'uploaded';
 const PARSED_FOLDER = process.env.PARSED_FOLDER || 'parsed';
 const QUEUE_URL = process.env.QUEUE_URL || '';
 const ACCOUNT_ID = process.env.ACCOUNT_ID || '';
+const SQS_ARN = process.env.SQS_ARN || '';
+const AUTH_ARN = process.env.AUTH_ARN || '';
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -47,7 +49,7 @@ export class ImportServiceStack extends cdk.Stack {
     const catalogItemsQueue = sqs.Queue.fromQueueArn(
       this,
       'CatalogItemsQueue',
-      `arn:aws:sqs:eu-west-1:248189938737:catalogItemsQueue`
+      SQS_ARN,
     );
 
     const importProductsFileFunction = new lambda.Function(this, 'ImportProductsFileFunction', {
@@ -89,7 +91,7 @@ export class ImportServiceStack extends cdk.Stack {
     const basicAuthorizerFn = lambda.Function.fromFunctionArn(
       this,
       'BasicAuthorizer',
-      `arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:AuthorizationServiceStack-BasicAuthorizer2B49C1FC-0xOTdkGW14rg`,
+      AUTH_ARN,
     );
 
     // Create the authorizer using the existing Lambda

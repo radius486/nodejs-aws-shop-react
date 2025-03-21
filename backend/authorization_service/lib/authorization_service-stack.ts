@@ -17,7 +17,8 @@ export class AuthorizationServiceStack extends cdk.Stack {
       handler: 'basic_authorizer.handler',
       code: lambda.Code.fromAsset('dist/lambda/basic_authorizer'),
       environment: {
-        AUTH_TOKEN: process.env.AUTH_TOKEN || '',
+        USERNAME: process.env.USERNAME || '',
+        PASSWORD: process.env.PASSWORD || '',
       },
     });
 
