@@ -54,7 +54,19 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
         body: file,
       });
 
+      const message = 'Products have been uploaded';
+      const status = 200;
+
       console.log("Result: ", result);
+
+      enqueueSnackbar({
+        message: `${status}, ${message}`,
+        variant: "success",
+        anchorOrigin: {
+          vertical: "top",
+          horizontal: "left",
+        }
+      });
     } catch (error) {
       console.log(error);
 
