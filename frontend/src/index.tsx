@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { theme } from "~/theme";
+import { SnackbarProvider } from "notistack";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,10 +15,10 @@ const queryClient = new QueryClient({
   },
 });
 
-if (import.meta.env.DEV) {
-  const { worker } = await import("./mocks/browser");
-  worker.start({ onUnhandledRequest: "bypass" });
-}
+// if (import.meta.env.DEV) {
+//   const { worker } = await import("./mocks/browser");
+//   worker.start({ onUnhandledRequest: "bypass" });
+// }
 
 const container = document.getElementById("app");
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -26,6 +27,7 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
+        <SnackbarProvider autoHideDuration={5000} maxSnack={3} />
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <App />

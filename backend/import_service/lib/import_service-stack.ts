@@ -14,6 +14,9 @@ const REGION = process.env.AWS_REGION || 'eu-west-1';
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || 'uploaded';
 const PARSED_FOLDER = process.env.PARSED_FOLDER || 'parsed';
 const QUEUE_URL = process.env.QUEUE_URL || '';
+const ACCOUNT_ID = process.env.ACCOUNT_ID || '';
+const SQS_ARN = process.env.SQS_ARN || '';
+const AUTH_ARN = process.env.AUTH_ARN || '';
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -46,7 +49,7 @@ export class ImportServiceStack extends cdk.Stack {
     const catalogItemsQueue = sqs.Queue.fromQueueArn(
       this,
       'CatalogItemsQueue',
-      `arn:aws:sqs:eu-west-1:248189938737:catalogItemsQueue`
+      SQS_ARN,
     );
 
     const importProductsFileFunction = new lambda.Function(this, 'ImportProductsFileFunction', {
@@ -84,6 +87,20 @@ export class ImportServiceStack extends cdk.Stack {
     bucket.grantReadWrite(importProductsFileFunction);
     bucket.grantReadWrite(importFileParserFunction);
 
+    // Reference the existing authorizer Lambda by ARN
+    const basicAuthorizerFn = lambda.Function.fromFunctionArn(
+      this,
+      'BasicAuthorizer',
+      AUTH_ARN,
+    );
+
+    // Create the authorizer using the existing Lambda
+    const authorizer = new apigateway.TokenAuthorizer(this, 'ImportApiAuthorizer', {
+      handler: basicAuthorizerFn,
+      identitySource: apigateway.IdentitySource.header('Authorization'),
+      resultsCacheTtl: cdk.Duration.seconds(0), // disable caching
+    });
+
     const importApi = new apigateway.LambdaRestApi(this, 'ImportApi', {
       handler: importProductsFileFunction,
       proxy: false,
@@ -95,7 +112,15 @@ export class ImportServiceStack extends cdk.Stack {
     });
 
     const importResource = importApi.root.addResource('import');
-    importResource.addMethod('GET', new apigateway.LambdaIntegration(importProductsFileFunction));
+
+    // Add the method with the existing authorizer
+    importResource.addMethod('GET',
+      new apigateway.LambdaIntegration(importProductsFileFunction),
+      {
+        authorizer: authorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
 
     bucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
