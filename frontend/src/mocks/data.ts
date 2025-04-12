@@ -74,7 +74,7 @@ export const orders: Order[] = [
       address: "some address",
       firstName: "Name",
       lastName: "Surname",
-      comment: "",
+      comment: ""
     },
     items: [
       { productId: "7567ec4b-b10c-48c5-9345-fc73c48a80aa", count: 2 },
@@ -83,6 +83,9 @@ export const orders: Order[] = [
     statusHistory: [
       { status: OrderStatus.Open, timestamp: Date.now(), comment: "New order" },
     ],
+    status: OrderStatus.Open,
+    comments: "Some comments",
+    total: 100,
   },
   {
     id: "2",
@@ -100,5 +103,8 @@ export const orders: Order[] = [
         comment: "Fancy order",
       },
     ],
+    status: OrderStatus.Open,
+    comments: "Some comments",
+    total: 100,
   },
 ];
