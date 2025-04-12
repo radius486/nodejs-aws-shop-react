@@ -23,9 +23,9 @@ export default function Orders() {
       <Table aria-label="simple table">
         <TableHead>
           <TableRow>
-            <TableCell>From</TableCell>
             <TableCell align="right">Items count</TableCell>
-            <TableCell align="right">Address</TableCell>
+            <TableCell>Total</TableCell>
+            <TableCell align="right">Comments</TableCell>
             <TableCell align="right">Status</TableCell>
             <TableCell align="right">Action</TableCell>
           </TableRow>
@@ -33,13 +33,13 @@ export default function Orders() {
         <TableBody>
           {data?.map((order) => (
             <TableRow key={order.id}>
+              <TableCell align="center">{order.items.length}</TableCell>
               <TableCell component="th" scope="row">
-                {order.address?.firstName} {order.address?.lastName}
+                {order.total}
               </TableCell>
-              <TableCell align="right">{order.items.length}</TableCell>
-              <TableCell align="right">{order.address?.address}</TableCell>
+              <TableCell align="right">{order.comments}</TableCell>
               <TableCell align="right">
-                {order.statusHistory[order.statusHistory.length - 1].status}
+                {order.status}
               </TableCell>
               <TableCell align="right">
                 <Button

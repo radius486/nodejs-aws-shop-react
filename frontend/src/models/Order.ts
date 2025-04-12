@@ -28,8 +28,19 @@ export type statusHistory = Yup.InferType<typeof statusHistorySchema>;
 export const OrderSchema = Yup.object({
   id: Yup.string().required(),
   items: Yup.array().of(OrderItemSchema).defined(),
-  address: AddressSchema.required(),
-  statusHistory: Yup.array().of(statusHistorySchema).defined(),
+  status: Yup.mixed<OrderStatus>().oneOf(Object.values(OrderStatus)).required(),
+  payment: Yup.object().shape({
+    amount: Yup.number().required(),
+    method: Yup.string().required(),
+    card_last4: Yup.string()
+  }),
+  delivery: Yup.object().shape({
+    zip: Yup.string().required(),
+    city: Yup.string().required(),
+    address: Yup.string().required(),
+  }),
+  comments: Yup.string().required(),
+  total: Yup.number().required(),
 }).defined();
 
 export type Order = Yup.InferType<typeof OrderSchema>;
