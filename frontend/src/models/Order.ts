@@ -30,6 +30,9 @@ export const OrderSchema = Yup.object({
   items: Yup.array().of(OrderItemSchema).defined(),
   address: AddressSchema.required(),
   statusHistory: Yup.array().of(statusHistorySchema).defined(),
+  status: Yup.mixed<OrderStatus>().oneOf(Object.values(OrderStatus)).required(),
+  comments: Yup.string().required(),
+  total: Yup.number().required(),
 }).defined();
 
 export type Order = Yup.InferType<typeof OrderSchema>;
