@@ -29,8 +29,27 @@ const getRequestBody = async (req: IncomingMessage): Promise<string> => {
   });
 };
 
+// Add CORS headers helper function
+const setCorsHeaders = (res: ServerResponse) => {
+  res.setHeader('Access-Control-Allow-Origin', '*'); // You might want to restrict this to specific origins
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '3600');
+};
+
 const server = http.createServer(async (req: IncomingMessage, res: ServerResponse) => {
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(res);
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
   try {
+    // Add CORS headers to all responses
+    setCorsHeaders(res);
+
     const parsedUrl = url.parse(req.url || '', true);
     const pathSegments = parsedUrl.pathname?.split('/').filter(Boolean) || [];
 
@@ -73,6 +92,11 @@ const server = http.createServer(async (req: IncomingMessage, res: ServerRespons
         },
       },
       (serviceRes) => {
+        const responseHeaders = {
+          ...serviceRes.headers,
+          'Access-Control-Allow-Origin': '*', // Make sure CORS headers are included
+        };
+
         res.writeHead(serviceRes.statusCode || 502, serviceRes.headers);
 
         serviceRes.on('data', (chunk) => {
@@ -101,6 +125,7 @@ const server = http.createServer(async (req: IncomingMessage, res: ServerRespons
     forwardRequest.end();
 
   } catch (error) {
+    setCorsHeaders(res);
     res.writeHead(502, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       error: 'Cannot process request',
