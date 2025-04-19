@@ -1,44 +1,62 @@
 import * as http from 'http';
-import * as url from 'url';
 import * as dotenv from 'dotenv';
-import { IncomingMessage, ServerResponse } from 'http';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import { IncomingMessage, ServerResponse, OutgoingHttpHeaders } from 'http';
+import NodeCache from 'node-cache';
 
 dotenv.config();
 
-// Interface for service mapping
+// Cache service implementation
+const cache = new NodeCache({ stdTTL: 120 }); // 2 minutes TTL
+
+const cacheService = {
+  get: <T>(key: string): T | undefined => {
+    return cache.get(key);
+  },
+  set: (key: string, value: any): void => {
+    cache.set(key, value);
+  },
+  del: (key: string): void => {
+    cache.del(key);
+  }
+};
+
+// Interface definitions
 interface ServiceMapping {
   [key: string]: string | undefined;
 }
 
-// Create service URL mapping
 const serviceUrls: ServiceMapping = {
   cart: process.env.CART_SERVICE_URL,
   products: process.env.PRODUCT_SERVICE_URL,
 };
 
 // Helper function to read request body
-const getRequestBody = async (req: IncomingMessage): Promise<string> => {
+const getRequestBody = async (req: IncomingMessage): Promise<any> => {
   return new Promise((resolve) => {
     let body = '';
     req.on('data', (chunk) => {
       body += chunk.toString();
     });
     req.on('end', () => {
-      resolve(body);
+      try {
+        resolve(body ? JSON.parse(body) : null);
+      } catch (e) {
+        resolve(body);
+      }
     });
   });
 };
 
 // Add CORS headers helper function
 const setCorsHeaders = (res: ServerResponse) => {
-  res.setHeader('Access-Control-Allow-Origin', '*'); // You might want to restrict this to specific origins
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Max-Age', '3600');
 };
 
 const server = http.createServer(async (req: IncomingMessage, res: ServerResponse) => {
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     setCorsHeaders(res);
     res.writeHead(204);
@@ -47,11 +65,10 @@ const server = http.createServer(async (req: IncomingMessage, res: ServerRespons
   }
 
   try {
-    // Add CORS headers to all responses
     setCorsHeaders(res);
 
-    const parsedUrl = url.parse(req.url || '', true);
-    const pathSegments = parsedUrl.pathname?.split('/').filter(Boolean) || [];
+    const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
+    const pathSegments = parsedUrl.pathname.split('/').filter(Boolean);
 
     if (!pathSegments.length) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -60,9 +77,9 @@ const server = http.createServer(async (req: IncomingMessage, res: ServerRespons
     }
 
     const serviceName = pathSegments[0];
-    const recipientURL = serviceUrls[serviceName];
+    const serviceUrl = serviceUrls[serviceName];
 
-    if (!recipientURL) {
+    if (!serviceUrl) {
       res.writeHead(502, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         error: 'Cannot process request',
@@ -71,65 +88,106 @@ const server = http.createServer(async (req: IncomingMessage, res: ServerRespons
       return;
     }
 
-    // Reconstruct the path without the service name
-    const remainingPath = pathSegments.slice(1).join('/');
-    const queryString = parsedUrl.search || '';
-
-    // Construct target URL
-    const targetUrl = `${recipientURL}/${remainingPath}${queryString}`;
-
-    // Get request body if present
     const body = await getRequestBody(req);
 
-    // Forward the request
-    const forwardRequest = http.request(
-      targetUrl,
-      {
-        method: req.method,
-        headers: {
-          ...req.headers,
-          host: new URL(recipientURL).host,
-        },
-      },
-      (serviceRes) => {
-        const responseHeaders = {
-          ...serviceRes.headers,
-          'Access-Control-Allow-Origin': '*', // Make sure CORS headers are included
-        };
+    // Check if it's a products list request
+    const isProductsList = serviceName === 'products' && req.method === 'GET';
 
-        res.writeHead(serviceRes.statusCode || 502, serviceRes.headers);
-
-        serviceRes.on('data', (chunk) => {
-          res.write(chunk);
+    // Try to get from cache for products list request
+    if (isProductsList) {
+      const cachedData = cacheService.get<any>('productsList');
+      if (cachedData) {
+        console.log('Serving from cache');
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'X-Cache': 'HIT'
         });
-
-        serviceRes.on('end', () => {
-          res.end();
-        });
+        res.end(JSON.stringify(cachedData));
+        return;
       }
-    );
-
-    forwardRequest.on('error', (error) => {
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        error: 'Cannot process request',
-        message: error.message
-      }));
-    });
-
-    // Send body data if present
-    if (body) {
-      forwardRequest.write(body);
     }
 
-    forwardRequest.end();
+    // Build target URL
+    const servicePath = pathSegments.slice(1).join('/');
+    const targetUrl = new URL(
+      servicePath,
+      serviceUrl.endsWith('/') ? serviceUrl : `${serviceUrl}/`
+    ).toString();
+
+    // Add query parameters
+    if (parsedUrl.search) {
+      targetUrl + parsedUrl.search;
+    }
+
+    const axiosConfig: AxiosRequestConfig = {
+      method: req.method || 'GET',
+      url: targetUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(req.headers.authorization && {
+          'Authorization': req.headers.authorization
+        })
+      },
+      validateStatus: () => true,
+      maxRedirects: 5,
+      timeout: 10000
+    };
+
+    // Add body for POST, PUT, PATCH methods
+    if (body && ['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
+      axiosConfig.data = body;
+    }
+
+    const response = await axios(axiosConfig);
+
+    // Cache products list response
+    if (isProductsList && response.status === 200) {
+      console.log('Caching products list');
+      cacheService.set('productsList', response.data);
+    }
+
+    // Invalidate cache on product creation
+    if (serviceName === 'products' && req.method === 'POST' && response.status === 200) {
+      console.log('Invalidating products list cache');
+      cacheService.del('productsList');
+    }
+
+    // Prepare response headers
+    const responseHeaders: OutgoingHttpHeaders = {
+      'Content-Type': 'application/json',
+      'X-Cache': isProductsList ? 'MISS' : 'BYPASS'
+    };
+
+    // Copy response headers
+    if (response.headers) {
+      Object.entries(response.headers).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            responseHeaders[key.toLowerCase()] = value;
+          } else {
+            responseHeaders[key.toLowerCase()] = String(value);
+          }
+        }
+      });
+    }
+
+    // Send response
+    res.writeHead(response.status, responseHeaders);
+    const responseData = typeof response.data === 'string'
+      ? response.data
+      : JSON.stringify(response.data);
+    res.end(responseData);
 
   } catch (error) {
-    setCorsHeaders(res);
-    res.writeHead(502, { 'Content-Type': 'application/json' });
+    console.error('Request failed:', error);
+
+    const axiosError = error as AxiosError;
+    const statusCode = axiosError.response?.status || 502;
+
+    res.writeHead(statusCode, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       error: 'Cannot process request',
-      message: error instanceof Error ? error.message : 'Internal server error'
+      details: axiosError.message
     }));
   }
 });
