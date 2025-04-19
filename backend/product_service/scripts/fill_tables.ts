@@ -10,6 +10,7 @@ type ProductInput = {
   description: string;
   price: number;
   count: number;
+  image?: string;
 }
 
 const client = new DynamoDBClient({});
@@ -29,7 +30,8 @@ export const createMultipleProductsWithStock = async (products: ProductInput[]) 
             id: { S: productId },
             title: { S: product.title },
             description: { S: product.description || "" },
-            price: { N: product.price.toString() }
+            price: { N: product.price.toString() },
+            image: { S: product.image || "" },
           }
         }
       },

@@ -24,7 +24,7 @@ export const handler = async (event: any): Promise<any> => {
 
     const errors = [];
     const product = JSON.parse(event.body);
-    const { title, description, price, count } = product;
+    const { title, description, price, count, image } = product;
 
     if (!title) {
       errors.push('Title is required');
@@ -64,6 +64,10 @@ export const handler = async (event: any): Promise<any> => {
 
     if (typeof count !== 'number') {
       errors.push('Count must be a number');
+    }
+
+    if (typeof image !== 'string') {
+      errors.push('Image must be a string');
     }
 
     if (errors.length) {

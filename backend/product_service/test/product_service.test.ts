@@ -26,7 +26,8 @@ describe('Product Service Lambda Functions', () => {
               title: 'SQS Product 1',
               description: 'Description 1',
               price: 100,
-              count: 10
+              count: 10,
+              image: "https://random-image-pepebigotes.vercel.app/api/random-image",
             })
           },
           {
@@ -34,7 +35,8 @@ describe('Product Service Lambda Functions', () => {
               title: 'SQS Product 2',
               description: 'Description 2',
               price: 200,
-              count: 20
+              count: 20,
+              image: "https://random-image-pepebigotes.vercel.app/api/random-image",
             })
           }
         ]
