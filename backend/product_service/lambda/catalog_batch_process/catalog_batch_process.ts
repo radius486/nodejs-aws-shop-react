@@ -20,6 +20,7 @@ export const handler: any = async (event: any): Promise<void> => {
         description: product.description,
         price: Number(product.price),
         count: Number(product.count),
+        image: product.image,
       }
 
       const { title, description, price, count } = formattedProduct;

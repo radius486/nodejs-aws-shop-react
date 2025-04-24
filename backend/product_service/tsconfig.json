@@ -32,6 +32,6 @@
     "node_modules",
     "cdk.out",
     "dist/**/*",
-    // "test/**/*",
+    "test/**/*",
   ]
 }

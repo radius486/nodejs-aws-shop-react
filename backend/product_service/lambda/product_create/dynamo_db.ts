@@ -11,6 +11,7 @@ type ProductInput = {
   description: string;
   price: number;
   count: number;
+  image?: string;
 }
 
 const client = new DynamoDBClient({});
@@ -29,7 +30,8 @@ export const createProductWithStock = async (product: ProductInput) => {
             id: { S: productId },
             title: { S: title },
             description: { S: description || "" },
-            price: { N: price.toString() }
+            price: { N: price.toString() },
+            image: { S: product.image || "" }
           },
           // Optional: Ensure the product doesn't already exist
           ConditionExpression: "attribute_not_exists(id)"
